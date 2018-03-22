@@ -27,8 +27,14 @@ def getMoviesListByQuery(query, token):
     movies = []
     for movie in data['results']:
         title = movie['title']
-        id = movie['id']
-        movie = {'title':title, 'id':id}
+        id = str(movie['id'])
+        date = movie['release_date']
+        lang = movie['original_language']
+        movie = {'title':title,
+                 'id':id,
+                 'year':date[0:4],
+                 'language':lang.upper()
+                 }
         movies.append(movie)
     conn.close()
     return movies

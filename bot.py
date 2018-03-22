@@ -14,14 +14,40 @@ def start(message):
 
 @bot.message_handler(commands=['search',])
 def search_movies(message):
-    searchQuery = str(message.text)
-    movies = movie_funcs.getMoviesListByQuery(searchQuery.replace('/search ', ''), MOVIEDB_TOKEN)
-    reply = ''
-    for movie in movies:
-        reply += '//' + movie['title'] + ' - '  + str(movie['id']) + '\n'
-    msg = bot.reply_to(message, reply)
-    print('replied')
-    bot.register_next_step_handler(msg, search_movies)
+    searchQuery = message.text.replace('/search ', '')
+    movies = movie_funcs.getMoviesListByQuery(searchQuery, MOVIEDB_TOKEN)
+    if len(movies) == 1:
+        movieId = movies[0]['id']
+        movie = movie_funcs.getMovieById(movieId, MOVIEDB_TOKEN)
+        reply = str(movie)
+        bot.reply_to(message, reply)
+        return True
+    elif len(movies) == 0:
+        bot.reply_to(message, 'I don\'t know a single movie with this title')
+        return True
+    elif len(movies) > 1:
+        i = []
+        for movie in movies:
+            if movie['title'] == searchQuery:
+                i.append(movie)
+        if len(i) == 1:
+            movieId = movies[0]['id']
+            movie = movie_funcs.getMovieById(movieId, MOVIEDB_TOKEN)
+            image = movie_funcs.getPosterById(movieId, MOVIEDB_TOKEN, IMAGE_BASE_URL)
+            bot.send_photo(message.chat.id, image)
+            reply = str(movie)
+            bot.send_message(message.chat.id, reply)
+            return True
+        elif len(i) > 1:
+            bot.send_message(message.chat.id, 'I have found more than 1 movie with this title')
+            return True
+        else:
+            reply = str(movies)
+            bot.reply_to(message, reply)
+            return True
+    else:
+        bot.reply_to(message, 'There is some error. Sry')
+        return False
 
 @bot.message_handler(commands = ['poster',])
 def posterPost(message):
