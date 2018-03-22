@@ -14,6 +14,7 @@ def getMovieById(movieId, token):
     conn.request("GET", "/3/movie/%s?api_key=%s" % (movieId, token))
     res = conn.getresponse()
     data = resToDict(res)
+    data['pprint'] = pprintOfMovie(data)
     conn.close()
     return data
 
@@ -28,14 +29,11 @@ def getMoviesListByQuery(query, token):
     for movie in data['results']:
         title = movie['title']
         id = str(movie['id'])
-        date = movie['release_date']
-        lang = movie['original_language']
-        movie = {'title':title,
+        minMovie = {'title':title,
                  'id':id,
-                 'year':date[0:4],
-                 'language':lang.upper()
+                 'pprint':pprintOfMovie(movie)
                  }
-        movies.append(movie)
+        movies.append(minMovie)
     conn.close()
     return movies
 
@@ -43,7 +41,21 @@ def getPosterById(id, token, baseImageUrl):
     from urllib.request import urlopen
 
     movie = getMovieById(id, token)
-    imageUrl = baseImageUrl + quote(movie['poster_path'])
-    return urlopen(imageUrl)
+    imageUrl = baseImageUrl + movie['poster_path']
+    try:
+        return urlopen(imageUrl)
+    except Exception:
+        return urlopen('https://pp.userapi.com/c638523/v638523274/22a65/-dmvOVVXoA0.jpg')
+
+
+#Take movie dict and return prettified str
+def pprintOfMovie(movie):
+    reply = ''
+    reply += movie['title']
+    reply += '['+movie['original_language'].upper()+']' 
+    reply += ' ('+movie['release_date'][0:4]+') '
+    return reply
+
+    
 
 

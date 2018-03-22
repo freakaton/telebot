@@ -3,6 +3,7 @@ import os
 from flask import Flask, request
 from settings import TOKEN, URL, MOVIEDB_TOKEN, IMAGE_BASE_URL
 import movie_funcs
+from handful_funcs import showListOfMovies, fullDescOfMovie, compareQueryAndMovies
 
 bot = telebot.TeleBot(TOKEN)
 server = Flask(__name__)
@@ -16,38 +17,60 @@ def start(message):
 def search_movies(message):
     searchQuery = message.text.replace('/search ', '')
     movies = movie_funcs.getMoviesListByQuery(searchQuery, MOVIEDB_TOKEN)
+
+    #if only one movie has been found. EXIT
     if len(movies) == 1:
-        movieId = movies[0]['id']
-        movie = movie_funcs.getMovieById(movieId, MOVIEDB_TOKEN)
-        reply = str(movie)
-        bot.reply_to(message, reply)
+        movie = movies[0]
+        image = movie_funcs.getPosterById(movie['id'], MOVIEDB_TOKEN, IMAGE_BASE_URL)
+        bot.send_photo(message.chat.id, image)
+        bot.send_message(message.chat.id, fullDescOfMovie(movie))
         return True
+
+    #if query doesn't have any correlations with existing movies. EXIT
     elif len(movies) == 0:
         bot.reply_to(message, 'I don\'t know a single movie with this title')
         return True
+
+    #if more than 1 movie has been found
     elif len(movies) > 1:
-        i = []
-        for movie in movies:
-            if movie['title'] == searchQuery:
-                i.append(movie)
-        if len(i) == 1:
-            movieId = movies[0]['id']
-            movie = movie_funcs.getMovieById(movieId, MOVIEDB_TOKEN)
-            image = movie_funcs.getPosterById(movieId, MOVIEDB_TOKEN, IMAGE_BASE_URL)
+        result = compareQueryAndMovies(searchQuery, movies)
+        if result:
+            image = movie_funcs.getPosterById(result['id'], MOVIEDB_TOKEN, IMAGE_BASE_URL)
             bot.send_photo(message.chat.id, image)
-            reply = str(movie)
-            bot.send_message(message.chat.id, reply)
-            return True
-        elif len(i) > 1:
-            bot.send_message(message.chat.id, 'I have found more than 1 movie with this title')
-            return True
-        else:
-            reply = str(movies)
-            bot.reply_to(message, reply)
-            return True
-    else:
-        bot.reply_to(message, 'There is some error. Sry')
-        return False
+            bot.send_message(message.chat.id, fullDescOfMovie(result))
+        bot.send_message(message.chat.id, '''
+            Has been found more than 1 movie with this title.\n
+            Enter number of movie or /exit to exit 
+        ''')
+        msg = bot.reply_to(message, showListOfMovies(movies))
+        
+        #Handle choosing from list of movies 
+        def choiceFromList(message):
+            nonlocal movies
+            text = message.text
+            #Exiting from choosing. EXIT
+            if text == '/exit':
+                return True
+
+            #Checking msg for digitable
+            elif text.isdigit():
+                #Handle if number not in list. EXIT
+                if int(text) > len(movies) or int(text) < 1:
+                    bot.reply_to(message, 'Your number not in list :(')
+                    return True
+                #If in list..
+                else:
+                    movie = movies[int(text)-1]
+                    image = movie_funcs.getPosterById(movie['id'], MOVIEDB_TOKEN, IMAGE_BASE_URL)
+                    bot.send_photo(message.chat.id, image)
+                    bot.send_message(message.chat.id, fullDescOfMovie(movie))
+                    return True
+            #If not a digit and not /exit. EXIT
+            else:
+                bot.reply_to(message, 'You input not a digit. WHY?!')
+                return True
+
+        bot.register_next_step_handler(msg, choiceFromList)
 
 @bot.message_handler(commands = ['poster',])
 def posterPost(message):
