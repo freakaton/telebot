@@ -1,6 +1,6 @@
 import json
 import http.client
-import urllib 
+from urllib.parse import quote
 
 #Take JSON HTTPS response and return dict
 def resToDict(res):
@@ -8,15 +8,19 @@ def resToDict(res):
     data = json.loads(data)
     return data
 
-def getMovieById(conn, movieId, token):
+
+def getMovieById(movieId, token):
+    conn = http.client.HTTPSConnection('api.themoviedb.org')
     conn.request("GET", "/3/movie/%s?api_key=%s" % (movieId, token))
     res = conn.getresponse()
     data = resToDict(res)
-    print('***', data['title'], '***\n\n', data['overview'])
+    conn.close()
+    return data
+
 
 def getMoviesListByQuery(query, token):
     conn = http.client.HTTPSConnection('api.themoviedb.org')
-    query = urllib.parse.quote(query)
+    query = quote(query)
     conn.request("GET", "/3/search/movie?query=%s&include_adult=true&page=1&api_key=%s" % (query, token))
     res = conn.getresponse()
     data = resToDict(res)
@@ -28,5 +32,12 @@ def getMoviesListByQuery(query, token):
         movies.append(movie)
     conn.close()
     return movies
+
+def getPosterById(id, token, baseImageUrl):
+    from urllib.request import urlopen
+
+    movie = getMovieById(id, token)
+    imageUrl = baseImageUrl + quote(movie['poster_path'])
+    return urlopen(imageUrl)
 
 

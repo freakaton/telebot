@@ -1,7 +1,7 @@
 import telebot
 import os
 from flask import Flask, request
-from settings import TOKEN, URL, MOVIEDB_TOKEN
+from settings import TOKEN, URL, MOVIEDB_TOKEN, IMAGE_BASE_URL
 import movie_funcs
 
 bot = telebot.TeleBot(TOKEN)
@@ -12,7 +12,7 @@ server = Flask(__name__)
 def start(message):
     bot.reply_to(message, 'Hello, ' + message.from_user.first_name)
 
-@bot.message_handler(commands=['search'])
+@bot.message_handler(commands=['search',])
 def search_movies(message):
     searchQuery = str(message.text)
     movies = movie_funcs.getMoviesListByQuery(searchQuery.replace('/search ', ''), MOVIEDB_TOKEN)
@@ -22,6 +22,17 @@ def search_movies(message):
     msg = bot.reply_to(message, reply)
     print('replied')
     bot.register_next_step_handler(msg, search_movies)
+
+@bot.message_handler(commands = ['poster',])
+def posterPost(message):
+    msg = message.text.replace('/poster ', '')
+    if not msg.isdigit():
+        bot.reply_to(message, 'Please, enter id of the movie!')
+    image = movie_funcs.getPosterById(msg, MOVIEDB_TOKEN, IMAGE_BASE_URL)
+    print('image has been received!')
+    bot.send_photo(message.chat.id, image)
+    
+    
 
 
 @server.route('/' + TOKEN, methods=['POST'])
