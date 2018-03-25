@@ -39,10 +39,9 @@ def getMoviesListByQuery(query, token):
 
 def getPosterById(id, token, baseImageUrl):
     from urllib.request import urlopen
-
-    movie = getMovieById(id, token)
-    imageUrl = baseImageUrl + movie['poster_path']
     try:
+        movie = getMovieById(id, token)
+        imageUrl = baseImageUrl + movie['poster_path']
         return urlopen(imageUrl)
     except Exception:
         return urlopen('https://pp.userapi.com/c638523/v638523274/22a65/-dmvOVVXoA0.jpg')

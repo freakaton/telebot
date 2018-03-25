@@ -5,7 +5,29 @@ def showListOfMovies(movies):
     return reply
 
 def fullDescOfMovie(movie):
-    return '****'+movie['pprint']+'****'
+    reply = '***'+movie['title']+'***\n\n'
+    if 'production_countries' in movie:
+        countries = []
+        for country in movie['production_countries']:
+            countries.append(country['name'])
+        reply += 'countries: '+', '.join(countries)+'\n'
+    if 'genres' in movie:
+        genres = []
+        for genre in movie['genres']:
+            genres.append(genre['name'])
+        reply += 'genre: '+', '.join(genres)+'\n'
+    if 'runtime' in movie:
+        reply += 'length: '+str(movie['runtime'])+' min.\n'
+    if 'release_date' in movie:
+        reply += 'release date: '+movie['release_date']+'\n'
+    if 'overview' in movie:
+        reply += 'Overview: \n'+movie['overview']+'\n'
+    if 'vote_average' in movie:
+        reply += '`'+'vote_average: '+ str(movie['vote_average'])+'/10`\n'
+    return reply
+        
+
+
 #search for exactly 1 match of query and movie title
 def compareQueryAndMovies(query, movies):
     i = []

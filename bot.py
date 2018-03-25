@@ -3,6 +3,7 @@ import os
 from flask import Flask, request
 from settings import TOKEN, URL, MOVIEDB_TOKEN, IMAGE_BASE_URL
 import movie_funcs
+from movie_funcs import getMovieById
 from handful_funcs import showListOfMovies, fullDescOfMovie, compareQueryAndMovies
 
 bot = telebot.TeleBot(TOKEN)
@@ -11,11 +12,14 @@ server = Flask(__name__)
 
 @bot.message_handler(commands=['start', 'help'])
 def start(message):
-    bot.reply_to(message, 'Hello, ' + message.from_user.first_name)
+    bot.send_message(message.chat.id, 'Hello, ' + message.from_user.first_name+'\n')
+    reply = ''' I can look for movies and get info about those.
+    Just type /search to start
+    '''
+    bot.reply_to(message, reply)
 
-@bot.message_handler(commands=['search',])
 def search_movies(message):
-    searchQuery = message.text.replace('/search ', '')
+    searchQuery = message.text
     movies = movie_funcs.getMoviesListByQuery(searchQuery, MOVIEDB_TOKEN)
 
     #if only one movie has been found. EXIT
@@ -23,7 +27,7 @@ def search_movies(message):
         movie = movies[0]
         image = movie_funcs.getPosterById(movie['id'], MOVIEDB_TOKEN, IMAGE_BASE_URL)
         bot.send_photo(message.chat.id, image)
-        bot.send_message(message.chat.id, fullDescOfMovie(movie))
+        bot.send_message(message.chat.id, fullDescOfMovie(getMovieById(movie['id'], MOVIEDB_TOKEN)))
         return True
 
     #if query doesn't have any correlations with existing movies. EXIT
@@ -37,7 +41,7 @@ def search_movies(message):
         if result:
             image = movie_funcs.getPosterById(result['id'], MOVIEDB_TOKEN, IMAGE_BASE_URL)
             bot.send_photo(message.chat.id, image)
-            bot.send_message(message.chat.id, fullDescOfMovie(result))
+            bot.send_message(message.chat.id, fullDescOfMovie(getMovieById(result['id'], MOVIEDB_TOKEN)))
         bot.send_message(message.chat.id, '''
             Has been found more than 1 movie with this title.\n
             Enter number of movie or /exit to exit 
@@ -63,14 +67,21 @@ def search_movies(message):
                     movie = movies[int(text)-1]
                     image = movie_funcs.getPosterById(movie['id'], MOVIEDB_TOKEN, IMAGE_BASE_URL)
                     bot.send_photo(message.chat.id, image)
-                    bot.send_message(message.chat.id, fullDescOfMovie(movie))
+                    bot.send_message(message.chat.id, fullDescOfMovie(getMovieById(movie['id'], MOVIEDB_TOKEN)))
                     return True
             #If not a digit and not /exit. EXIT
             else:
-                bot.reply_to(message, 'You input not a digit. WHY?!')
+                bot.reply_to(message, 'ERROR. Please, input number of the movie')
+                bot.
                 return True
 
         bot.register_next_step_handler(msg, choiceFromList)
+
+@bot.message_handler(commands=['search',])
+def search(message):
+    msg = bot.reply_to(message, 'Ok, send me search query, please')
+    bot.register_next_step_handler(msg, search_movies)
+
 
 @bot.message_handler(commands = ['poster',])
 def posterPost(message):
