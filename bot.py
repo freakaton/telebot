@@ -5,7 +5,7 @@ from settings import TOKEN, URL, MOVIEDB_TOKEN, IMAGE_BASE_URL
 import movie_funcs
 from movie_funcs import getMovieById
 from handful_funcs import showListOfMovies, fullDescOfMovie, compareQueryAndMovies
-
+from telebot import types
 bot = telebot.TeleBot(TOKEN)
 server = Flask(__name__)
 
@@ -52,28 +52,25 @@ def search_movies(message):
         def choiceFromList(message):
             nonlocal movies
             text = message.text
-            #Exiting from choosing. EXIT
-            if text == '/exit':
+            if message.text == '/exit':
                 return True
-
             #Checking msg for digitable
             elif text.isdigit():
                 #Handle if number not in list. EXIT
                 if int(text) > len(movies) or int(text) < 1:
-                    bot.reply_to(message, 'Your number not in list :(')
-                    return True
+                    bot.reply_to(message, 'ERROR. Your number not in list :(\n Select right number from list')
+                    bot.register_next_step_handler(message, choiceFromList)
                 #If in list..
                 else:
                     movie = movies[int(text)-1]
                     image = movie_funcs.getPosterById(movie['id'], MOVIEDB_TOKEN, IMAGE_BASE_URL)
                     bot.send_photo(message.chat.id, image)
-                    bot.send_message(message.chat.id, fullDescOfMovie(getMovieById(movie['id'], MOVIEDB_TOKEN)))
+                    bot.send_message(message.chat.id, fullDescOfMovie(getMovieById(movie['id'], MOVIEDB_TOKEN)), parse_mode="HTML")
                     return True
             #If not a digit and not /exit. EXIT
             else:
                 bot.reply_to(message, 'ERROR. Please, input number of the movie')
-                bot.
-                return True
+                bot.register_next_step_handler(message, choiceFromList)
 
         bot.register_next_step_handler(msg, choiceFromList)
 

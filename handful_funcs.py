@@ -5,25 +5,25 @@ def showListOfMovies(movies):
     return reply
 
 def fullDescOfMovie(movie):
-    reply = '***'+movie['title']+'***\n\n'
-    if 'production_countries' in movie:
+    reply = '***<b>'+movie['title']+'</b>***\n\n'
+    if '<b>production_countries</b>' in movie:
         countries = []
         for country in movie['production_countries']:
             countries.append(country['name'])
-        reply += 'countries: '+', '.join(countries)+'\n'
+        reply += '<b>countries:</b> '+', '.join(countries)+'\n'
     if 'genres' in movie:
         genres = []
         for genre in movie['genres']:
             genres.append(genre['name'])
-        reply += 'genre: '+', '.join(genres)+'\n'
+        reply += '<b>genre:</b> '+', '.join(genres)+'\n'
     if 'runtime' in movie:
-        reply += 'length: '+str(movie['runtime'])+' min.\n'
+        reply += '<b>length:</b> '+str(movie['runtime'])+' min.\n'
     if 'release_date' in movie:
-        reply += 'release date: '+movie['release_date']+'\n'
+        reply += '<b>release date:</b> '+movie['release_date']+'\n'
     if 'overview' in movie:
-        reply += 'Overview: \n'+movie['overview']+'\n'
+        reply += '<b>Overview:</b> \n'+movie['overview']+'\n'
     if 'vote_average' in movie:
-        reply += '`'+'vote_average: '+ str(movie['vote_average'])+'/10`\n'
+        reply += '<b>'+'vote_average: '+ str(movie['vote_average'])+'/10</b>\n'
     return reply
         
 
