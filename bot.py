@@ -19,25 +19,21 @@ def start(message):
     bot.reply_to(message, reply)
 
 def search_movies(message):
+    if message.text == '/exit':
+        return True
     searchQuery = message.text
     movies = movie_funcs.getMoviesListByQuery(searchQuery, MOVIEDB_TOKEN)
 
-    #if only one movie has been found. EXIT
-    if len(movies) == 1:
-        movie = movies[0]
-        image = movie_funcs.getPosterById(movie['id'], MOVIEDB_TOKEN, IMAGE_BASE_URL)
-        bot.send_photo(message.chat.id, image)
-        bot.send_message(message.chat.id, fullDescOfMovie(getMovieById(movie['id'], MOVIEDB_TOKEN)))
-        return True
-
     #if query doesn't have any correlations with existing movies. EXIT
-    elif len(movies) == 0:
-        bot.reply_to(message, 'I don\'t know a single movie with this title')
+    if len(movies) == 0:
+        msg = bot.reply_to(message, 'I don\'t know a single movie with this title. Try again or type /exit to exit')
+        bot.register_next_step_handler(msg, search_movies)
         return True
 
-    #if more than 1 movie has been found
-    elif len(movies) > 1:
+    #if 1 or more movie has been found
+    elif len(movies) >= 1:
         result = compareQueryAndMovies(searchQuery, movies)
+        #if only one movie with same name as query exist
         if result:
             image = movie_funcs.getPosterById(result['id'], MOVIEDB_TOKEN, IMAGE_BASE_URL)
             bot.send_photo(message.chat.id, image)
@@ -50,12 +46,11 @@ def search_movies(message):
         
         #Handle choosing from list of movies 
         def choiceFromList(message):
+            print('Func is working')
             nonlocal movies
             text = message.text
-            if message.text == '/exit':
-                return True
             #Checking msg for digitable
-            elif text.isdigit():
+            if text.isdigit():
                 #Handle if number not in list. EXIT
                 if int(text) > len(movies) or int(text) < 1:
                     bot.reply_to(message, 'ERROR. Your number not in list :(\n Select right number from list')
@@ -65,7 +60,8 @@ def search_movies(message):
                     movie = movies[int(text)-1]
                     image = movie_funcs.getPosterById(movie['id'], MOVIEDB_TOKEN, IMAGE_BASE_URL)
                     bot.send_photo(message.chat.id, image)
-                    bot.send_message(message.chat.id, fullDescOfMovie(getMovieById(movie['id'], MOVIEDB_TOKEN)), parse_mode="HTML")
+                    msg = bot.send_message(message.chat.id, fullDescOfMovie(getMovieById(movie['id'], MOVIEDB_TOKEN)), parse_mode="HTML")
+                    bot.register_next_step_handler(msg, search_movies)
                     return True
             #If not a digit and not /exit. EXIT
             else:
@@ -76,7 +72,7 @@ def search_movies(message):
 
 @bot.message_handler(commands=['search',])
 def search(message):
-    msg = bot.reply_to(message, 'Ok, send me search query, please')
+    msg = bot.reply_to(message, 'send me what you want to search')
     bot.register_next_step_handler(msg, search_movies)
 
 
