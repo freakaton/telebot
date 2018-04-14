@@ -36,5 +36,7 @@ def compareQueryAndMovies(query, movies):
             i.append(movie)
     if len(i) == 1:
         return i[0]
+    if len(movies) == 1:
+        return movies[0]
     else:
         return False

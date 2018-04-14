@@ -32,21 +32,9 @@ def search_movies(message):
 
     #if 1 or more movie has been found
     elif len(movies) >= 1:
-        result = compareQueryAndMovies(searchQuery, movies)
-        #if only one movie with same name as query exist
-        if result:
-            image = movie_funcs.getPosterById(result['id'], MOVIEDB_TOKEN, IMAGE_BASE_URL)
-            bot.send_photo(message.chat.id, image)
-            bot.send_message(message.chat.id, fullDescOfMovie(getMovieById(result['id'], MOVIEDB_TOKEN)))
-        bot.send_message(message.chat.id, '''
-            Has been found more than 1 movie with this title.\n
-            Enter number of movie or /exit to exit 
-        ''')
-        msg = bot.reply_to(message, showListOfMovies(movies))
-        
+
         #Handle choosing from list of movies 
         def choiceFromList(message):
-            print('Func is working')
             nonlocal movies
             text = message.text
             #Checking msg for digitable
@@ -63,12 +51,29 @@ def search_movies(message):
                     msg = bot.send_message(message.chat.id, fullDescOfMovie(getMovieById(movie['id'], MOVIEDB_TOKEN)), parse_mode="HTML")
                     bot.register_next_step_handler(msg, search_movies)
                     return True
-            #If not a digit and not /exit. EXIT
+            #If not a digit. RETURN TO CHOICE
             else:
                 bot.reply_to(message, 'ERROR. Please, input number of the movie')
                 bot.register_next_step_handler(message, choiceFromList)
 
-        bot.register_next_step_handler(msg, choiceFromList)
+
+        result = compareQueryAndMovies(searchQuery, movies)
+        #if only one movie with same name as query exist
+        if result:
+            image = movie_funcs.getPosterById(result['id'], MOVIEDB_TOKEN, IMAGE_BASE_URL)
+            bot.send_photo(message.chat.id, image)
+            msg = bot.send_message(message.chat.id, fullDescOfMovie(getMovieById(result['id'], MOVIEDB_TOKEN)), parse_mode="HTML")
+            bot.register_next_step_handler(msg, search_movies)
+            return True
+        else:
+            bot.send_message(message.chat.id, '''
+                Has been found more than 1 movie with this title.\n
+                Enter number of movie or /exit to exit 
+            ''')
+            msg = bot.reply_to(message, showListOfMovies(movies))
+            bot.register_next_step_handler(msg, choiceFromList)
+
+
 
 @bot.message_handler(commands=['search',])
 def search(message):
