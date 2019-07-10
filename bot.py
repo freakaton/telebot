@@ -1,7 +1,7 @@
 import telebot
 import os
 from flask import Flask, request
-from settings import TOKEN, URL, MOVIEDB_TOKEN, IMAGE_BASE_URL
+from settings import TOKEN, URL, MOVIEDB_TOKEN, IMAGE_BASE_URL, SSL
 import movie_funcs
 from movie_funcs import getMovieById
 from handful_funcs import showListOfMovies, fullDescOfMovie, compareQueryAndMovies
@@ -105,4 +105,8 @@ def webhook():
     return "!", 200
 
 
-server.run(host="0.0.0.0", port=int(os.environ.get('PORT', '8443')))
+server.run(host="0.0.0.0",
+           port=8443,
+           ssl_context=SSL,
+           debug=True
+           )
