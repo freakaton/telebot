@@ -109,3 +109,6 @@ front/node_modules
 
 #idea
 .idea/
+
+docker.env
+*.pem

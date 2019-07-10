@@ -103,7 +103,7 @@ def search(message):
 
 if __name__ == '__main__':
     bot.remove_webhook()
-    time.sleep(0.1)
+    time.sleep(1)
     bot.set_webhook(url=settings.WEBHOOK_URL_BASE + settings.WEBHOOK_URL_PATH,
                     certificate=open(settings.WEBHOOK_SSL_CERT, 'r'))
     server.run(host="0.0.0.0",

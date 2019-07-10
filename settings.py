@@ -11,7 +11,7 @@ if None in (TOKEN, HOST, MOVIEDB_TOKEN):
 WEBHOOK_PORT = 8443
 WEBHOOK_URL_BASE = f'https://{HOST}:{WEBHOOK_PORT}'
 WEBHOOK_URL_PATH = f'/{TOKEN}/'
-IMAGE_BASE_URL = ''
+IMAGE_BASE_URL = 'http://image.tmdb.org/t/p/w500/'
 WEBHOOK_SSL_CERT = './webhook_cert.pem'
 WEBHOOK_SSL_PRIV = './webhook_pkey.pem'
 SSL = (WEBHOOK_SSL_CERT, WEBHOOK_SSL_PRIV)
