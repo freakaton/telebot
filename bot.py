@@ -1,24 +1,14 @@
 import telebot
-import os
-from flask import Flask, request
-from settings import TOKEN, URL, MOVIEDB_TOKEN, IMAGE_BASE_URL, SSL
+import time
+import flask
+
+import settings
 import movie_funcs
-from movie_funcs import getMovieById
-from handful_funcs import showListOfMovies, fullDescOfMovie, compareQueryAndMovies
-
-bot = telebot.TeleBot(TOKEN)
-server = Flask(__name__)
+from .movie_funcs import getMovieById
+from .handful_funcs import showListOfMovies, fullDescOfMovie, compareQueryAndMovies
 
 
-@bot.message_handler(commands=['start', 'help'])
-def start(message):
-    bot.send_message(message.chat.id, 'Hello, ' + message.from_user.first_name + '\n')
-    reply = ''' I can look for movies and get info about those.
-    Just type /search to start
-    '''
-    bot.reply_to(message, reply)
-
-
+"""
 def search_movies(message):
     if message.text == '/exit':
         return True
@@ -90,23 +80,46 @@ def posterPost(message):
     image = movie_funcs.getPosterById(msg, MOVIEDB_TOKEN, IMAGE_BASE_URL)
     print('image has been received!')
     bot.send_photo(message.chat.id, image)
+"""
+bot = telebot.TeleBot(settings.TOKEN)
+server = flask.Flask(__name__)
 
 
-@server.route('/' + TOKEN, methods=['POST'])
-def getMessage():
-    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
-    return "!", 200
+@server.route("/", methods=['GET', 'HEAD'])
+def index():
+    return ''
 
 
-@server.route("/")
+@server.route(settings.WEBHOOK_URL_PATH, methods=['POST'])
 def webhook():
-    bot.remove_webhook()
-    bot.set_webhook(url=URL + TOKEN)
-    return "!", 200
+    if flask.request.headers.get('content-type') == 'application/json':
+        json_string = flask.request.get_data().decode('utf-8')
+        update = telebot.types.Update.de_json(json_string)
+        bot.process_new_updates([update])
+        return ''
+    else:
+        flask.abort(403)
+
+
+@bot.message_handler(commands=['start', 'help'])
+def start(message):
+    bot.send_message(message.chat.id, 'Hello, ' + message.from_user.first_name + '\n')
+    reply = ''' I can look for movies and get info about those.
+    Just type /search to start
+    '''
+    bot.reply_to(message, reply)
+
+
+bot.remove_webhook()
+time.sleep(0.1)
+
+
+bot.set_webhook(url=settings.WEBHOOK_URL_BASE + settings.WEBHOOK_URL_PATH,
+                certificate=open(settings.WEBHOOK_SSL_CERT, 'r'))
 
 
 server.run(host="0.0.0.0",
-           port=8443,
-           ssl_context=SSL,
+           port=settings.WEBHOOK_PORT,
+           ssl_context=(settings.WEBHOOK_SSL_CERT, settings.WEBHOOK_SSL_PRIV),
            debug=True
            )
