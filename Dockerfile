@@ -1,13 +1,20 @@
-FROM ubuntu:18.04
+FROM python:3.7.4-alpine3.10
 
-RUN apt-get update && \
-    apt-get install -y build-essential \
-                    python3 \
-                    python3-dev \
-                    python3-pip
-COPY ./ /opt/app
-WORKDIR /opt/app
+ENV PYTHONUNBUFFERED 1
 
-RUN pip3 install -r /opt/app/requirements.txt
-EXPOSE 8443
-CMD ["python3", "/opt/app/bot.py"]
+COPY ["requirements.txt", "/app/"]
+WORKDIR /app
+
+RUN apk add --update --no-cache --virtual .build-deps \
+        build-base \
+        libffi-dev \
+        pcre \
+        gcc \
+        musl-dev \
+        linux-headers \
+        make \
+    && rm -rf /var/cache/apk/* \
+    && pip install --no-cache-dir --upgrade pip==9.0.3 pip-tools==1.9.0 \
+    && pip-sync requirements.txt \
+    && apk del .build-deps \
+    && rm -rf /root/.cache/*

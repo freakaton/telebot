@@ -1,0 +1,15 @@
+version: '3'
+services:
+
+  bot:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    command: "python /app/bot.py"
+    restart: "no"
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app/
+    ports:
+      - "8443:8443"

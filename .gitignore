@@ -112,3 +112,5 @@ front/node_modules
 
 docker.env
 *.pem
+
+docker-compose.override.yml
